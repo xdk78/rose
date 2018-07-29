@@ -1,6 +1,6 @@
 use std::env;
 use std::fs::File;
-use std::io::prelude::*;
+use std::io::{BufRead, BufReader};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -23,11 +23,15 @@ fn main() {
 }
 
 fn run_file(filename: &str) {
-    let mut file = File::open(filename).expect("file not found");
+    let mut file = BufReader::new(File::open(filename).expect("file not found"));
+    let mut buf = Vec::<u8>::new();
 
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)
-        .expect("something went wrong reading the file");
-
-    println!("{}", contents);
+    while file.read_until(b'\n', &mut buf).expect("read_until failed") != 0 {
+        let s = String::from_utf8(buf).expect("from_utf8 failed");
+        for c in s.chars() {
+            println!("Token: {}", c);
+        }
+        buf = s.into_bytes();
+        buf.clear();
+    }
 }
