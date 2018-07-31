@@ -138,10 +138,12 @@ impl<'a> Iterator for Scanner<'a> {
     type Item = Result<Token>;
 
     fn next(&mut self) -> Option<Self::Item> {
+        use token::TokenType::*;
+        
         if self.eof {
             return None;
         }
-        use token::TokenType::*;
+
         self.lexeme.clear();
 
         let c = self.advance().unwrap();
@@ -166,12 +168,22 @@ impl<'a> Iterator for Scanner<'a> {
             '/' => {
                 if self.match_advance('/') {
                     self.advance_until(['\n'].iter().cloned().collect());
-                    return self.next();
+                    self.next()
+                } else {
+                    self.match_static_token('=', SlashEqual, Slash)
                 }
-                self.match_static_token('=', SlashEqual, Slash)
             }
-            c if c.is_digit(10) => return self.number_literal(),
-            
+
+            c if c.is_whitespace() => {
+                self.lexeme.clear();
+                if c == '\n' {
+                    self.line += 1;
+                }
+                self.next()
+            }
+
+            c if c.is_digit(10) => self.number_literal(),
+
             _ => self.err("unexpected character"),
         }
     }
