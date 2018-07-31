@@ -43,10 +43,14 @@ impl<'a> Scanner<'a> {
     }
 
     fn peek(&mut self) -> char {
-        self.peek_next(1)
+        self.next_char(1)
     }
 
-    fn peek_next(&mut self, n: usize) -> char {
+    fn peek_next(&mut self) -> char {
+        self.next_char(2)
+    }
+
+    fn next_char(&mut self, n: usize) -> char {
         while self.peeks.len() < n {
             self.src
                 .next()
@@ -85,11 +89,14 @@ impl<'a> Scanner<'a> {
         self.literal_token(token_type, None)
     }
 
-    fn literal_token(
-        &self,
-        token_type: TokenType,
-        literal: Option<Literal>,
-    ) -> Option<Result<Token>> {
+    fn match_static_token(&mut self, c: char, m: TokenType, u: TokenType) -> Option<Result<Token>> {
+        match self.match_advance(c) {
+            true => self.static_token(m),
+            false => self.static_token(u),
+        }
+    }
+
+    fn literal_token(&self, token_type: TokenType, literal: Option<Literal>) -> Option<Result<Token>> {
         Some(Ok(Token {
             token_type: token_type,
             literal: literal,
@@ -98,19 +105,32 @@ impl<'a> Scanner<'a> {
         }))
     }
 
+    fn number_literal(&mut self) -> Option<Result<Token>> {
+        // 10 for decimal
+        while self.peek().is_digit(10) {
+            self.advance();
+        }
+
+        if self.peek() == '.' && self.peek_next().is_digit(10) {
+            self.advance();
+            while self.peek().is_digit(10) {
+                self.advance();
+            }
+        }
+
+        if let Ok(literal) = self.lexeme.clone().parse::<f64>() {
+            return self.literal_token(TokenType::Number, Some(Literal::Number(literal)));
+        }
+
+        self.err("invalid number")
+    }
+
     fn err(&self, msg: &str) -> Option<Result<Token>> {
         Some(Err(Error::Lexical(
             self.line,
             msg.to_string(),
             self.lexeme.clone(),
         ).boxed()))
-    }
-
-    fn match_static_token(&mut self, c: char, m: TokenType, u: TokenType) -> Option<Result<Token>> {
-        match self.match_advance(c) {
-            true => self.static_token(m),
-            false => self.static_token(u),
-        }
     }
 }
 
@@ -150,7 +170,8 @@ impl<'a> Iterator for Scanner<'a> {
                 }
                 self.match_static_token('=', SlashEqual, Slash)
             }
-
+            c if c.is_digit(10) => return self.number_literal(),
+            
             _ => self.err("unexpected character"),
         }
     }

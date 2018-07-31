@@ -75,4 +75,5 @@ pub enum TokenType {
 pub enum Literal {
     String(String),
     Number(f64),
+    Boolean(bool),
 }
