@@ -132,23 +132,23 @@ impl<'a> Iterator for Scanner<'a> {
             '}' => self.static_token(RightBrace),
             ',' => self.static_token(Comma),
             '.' => self.static_token(Dot),
-            '-' => self.static_token(Minus),
-            '+' => self.static_token(Plus),
             ';' => self.static_token(Semicolon),
-            '*' => self.static_token(Star),
             '\0' => self.static_token(EOF),
 
+            '-' => self.match_static_token('=', MinusEqual, Minus),
+            '+' => self.match_static_token('=', PlusEqual, Plus),
             '!' => self.match_static_token('=', BangEqual, Bang),
             '=' => self.match_static_token('=', EqualEqual, Equal),
             '<' => self.match_static_token('=', LessEqual, Less),
             '>' => self.match_static_token('=', GreaterEqual, Greater),
+            '*' => self.match_static_token('=', StarEqual, Star),
 
             '/' => {
                 if self.match_advance('/') {
                     self.advance_until(['\n'].iter().cloned().collect());
                     return self.next();
                 }
-                self.static_token(Slash)
+                self.match_static_token('=', SlashEqual, Slash)
             }
 
             _ => self.err("unexpected character"),
