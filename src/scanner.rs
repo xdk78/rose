@@ -125,6 +125,36 @@ impl<'a> Scanner<'a> {
         self.err("invalid number")
     }
 
+    fn string_literal(&mut self) -> Option<Result<Token>> {
+        loop {
+            let last = self.advance_until(['\n', '"'].iter().cloned().collect());
+
+            match self.peek() {
+                '\n' => self.line += 1,
+                '"' if last == '\\' => {
+                    self.lexeme.pop();
+                }
+                '"' => break,
+                '\0' => return self.err("unterminated string"),
+                _ => return self.err("unexpected character"),
+            };
+
+            self.advance();
+        }
+
+        self.advance();
+
+        let literal: String = self
+            .lexeme
+            .clone()
+            .chars()
+            .skip(1)
+            .take(self.lexeme.len() - 2)
+            .collect();
+
+        self.literal_token(TokenType::String, Some(Literal::String(literal)))
+    }
+
     fn err(&self, msg: &str) -> Option<Result<Token>> {
         Some(Err(Error::Lexical(
             self.line,
@@ -139,7 +169,7 @@ impl<'a> Iterator for Scanner<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         use token::TokenType::*;
-        
+
         if self.eof {
             return None;
         }
@@ -164,6 +194,8 @@ impl<'a> Iterator for Scanner<'a> {
             '<' => self.match_static_token('=', LessEqual, Less),
             '>' => self.match_static_token('=', GreaterEqual, Greater),
             '*' => self.match_static_token('=', StarEqual, Star),
+            
+            '"' => self.string_literal(),
 
             '/' => {
                 if self.match_advance('/') {
