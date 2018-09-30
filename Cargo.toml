@@ -1,6 +1,6 @@
 [package]
-name = "ros"
+name = "rose"
 version = "0.1.0"
-authors = ["xdk78 <xdk78@interia.pl>"]
+authors = ["xdk78 <xdk78888@gmail.com>"]
 
 [dependencies]

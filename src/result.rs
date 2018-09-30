@@ -28,7 +28,7 @@ impl From<io::Error> for Error {
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Error::Usage => write!(f, "Usage: ros [file]"),
+            Error::Usage => write!(f, "Usage: rose [file]"),
             Error::IO(ref e) => e.fmt(f),
             Error::Lexical(ref line, ref whence, ref msg) => {
                 write!(f, "[line {}] Error {}: {:?}", line, whence, msg)
@@ -40,7 +40,7 @@ impl fmt::Display for Error {
 impl error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::Usage => "Usage: ros [file]",
+            Error::Usage => "Usage: rose [file]",
             Error::IO(ref e) => e.description(),
             Error::Lexical(_, _, _) => "lexical error",
         }
