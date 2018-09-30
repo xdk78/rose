@@ -3,7 +3,7 @@ use std::collections::{HashSet, VecDeque};
 use std::ops::Index;
 use std::str::Chars;
 use token::Literal;
-use token::{Token, TokenType};
+use token::{Token, TokenType, RESERVED};
 
 pub struct Scanner<'a> {
     src: Chars<'a>,
@@ -32,14 +32,15 @@ impl<'a> Scanner<'a> {
         match self.peeks.len() {
             0 => self.src.next(),
             _ => self.peeks.pop_front(),
-        }.or_else(|| {
+        }
+        .or_else(|| {
             self.eof = true;
             Some('\0')
         })
-            .and_then(|c| {
-                self.lexeme.push(c);
-                Some(c)
-            })
+        .and_then(|c| {
+            self.lexeme.push(c);
+            Some(c)
+        })
     }
 
     fn peek(&mut self) -> char {
@@ -96,7 +97,11 @@ impl<'a> Scanner<'a> {
         }
     }
 
-    fn literal_token(&self, token_type: TokenType, literal: Option<Literal>) -> Option<Result<Token>> {
+    fn literal_token(
+        &self,
+        token_type: TokenType,
+        literal: Option<Literal>,
+    ) -> Option<Result<Token>> {
         Some(Ok(Token {
             token_type: token_type,
             literal: literal,
@@ -155,12 +160,24 @@ impl<'a> Scanner<'a> {
         self.literal_token(TokenType::String, Some(Literal::String(literal)))
     }
 
+    fn identifier(&mut self) -> Option<Result<Token>> {
+        while is_alphanumeric(self.peek()) {
+            self.advance();
+        }
+        let lex: &str = self.lexeme.as_ref();
+        let typ = RESERVED
+            .get(lex)
+            .map_or(TokenType::Identifier, |t| t.clone());
+        self.static_token(typ)
+    }
+
     fn err(&self, msg: &str) -> Option<Result<Token>> {
         Some(Err(Error::Lexical(
             self.line,
             msg.to_string(),
             self.lexeme.clone(),
-        ).boxed()))
+        )
+        .boxed()))
     }
 }
 
@@ -194,7 +211,7 @@ impl<'a> Iterator for Scanner<'a> {
             '<' => self.match_static_token('=', LessEqual, Less),
             '>' => self.match_static_token('=', GreaterEqual, Greater),
             '*' => self.match_static_token('=', StarEqual, Star),
-            
+
             '"' => self.string_literal(),
 
             '/' => {
@@ -215,6 +232,7 @@ impl<'a> Iterator for Scanner<'a> {
             }
 
             c if c.is_digit(10) => self.number_literal(),
+            c if is_alphanumeric(c) => self.identifier(),
 
             _ => self.err("unexpected character"),
         }
@@ -229,4 +247,8 @@ impl<'a> TokenIterator<'a> for Chars<'a> {
     fn tokens(self) -> Scanner<'a> {
         new(self)
     }
+}
+
+fn is_alphanumeric(c: char) -> bool {
+    return c.is_digit(36) || c == '_';
 }

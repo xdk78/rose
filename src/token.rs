@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Debug)]
@@ -10,14 +11,18 @@ pub struct Token {
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:?} {} {:?}", self.token_type, self.lexeme, self.literal)
+        write!(
+            f,
+            "{:?} {} {:?}",
+            self.token_type, self.lexeme, self.literal
+        )
     }
 }
 
 #[allow(dead_code)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum TokenType {
-    // Single-character tokens.
+    // Single-character tokens
     LeftParen,
     RightParen,
     LeftBrace,
@@ -30,7 +35,7 @@ pub enum TokenType {
     Slash,
     Star,
 
-    // One or two character tokens.
+    // One or two character tokens
     Bang,
     BangEqual,
     Equal,
@@ -44,26 +49,21 @@ pub enum TokenType {
     StarEqual,
     SlashEqual,
 
-    // Literals.
+    // Literals
     Identifier,
     String,
     Number,
+    Boolean,
 
-    // Keywords.
-    And,
-    Class,
+    // Keywords
     Else,
+    True,
     False,
     Fun,
     For,
     If,
-    Nil,
-    Or,
+    Null,
     Print,
-    Return,
-    Super,
-    This,
-    True,
     Mut,
     Const,
     While,
@@ -76,4 +76,23 @@ pub enum Literal {
     String(String),
     Number(f64),
     Boolean(bool),
+}
+
+lazy_static! {
+    pub static ref RESERVED: HashMap<&'static str, TokenType> = [
+        ("else", TokenType::Else),
+        ("false", TokenType::False),
+        ("fun", TokenType::Fun),
+        ("for", TokenType::For),
+        ("if", TokenType::If),
+        ("null", TokenType::Null),
+        ("print", TokenType::Print),
+        ("true", TokenType::True),
+        ("mut", TokenType::Mut),
+        ("const", TokenType::Const),
+        ("while", TokenType::While),
+    ]
+        .iter()
+        .cloned()
+        .collect();
 }

@@ -14,4 +14,19 @@ mut a = 2;
 56.344
 true
 false
-"testtt"
+"test string"
+mut
+const
+for
+while
+
+mut n = 12.5;
+n +=2;
+// comment here
+const hellow = "hello world";
+print hellow;
+
+true;
+false;
+
+
