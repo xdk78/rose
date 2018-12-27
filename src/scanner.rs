@@ -13,17 +13,18 @@ pub struct Scanner<'a> {
     eof: bool,
 }
 
-pub fn new(c: Chars) -> Scanner {
-    Scanner {
-        src: c,
-        peeks: VecDeque::with_capacity(2),
-        lexeme: "".to_string(),
-        line: 1,
-        eof: false,
-    }
-}
-
 impl<'a> Scanner<'a> {
+    /// Creates a new Scanner off a Chars iterator.
+    pub fn new(c: Chars<'a>) -> Self {
+        Scanner {
+            src: c,
+            peeks: VecDeque::with_capacity(2),
+            lexeme: "".to_string(),
+            line: 1,
+            eof: false,
+        }
+    }
+
     fn advance(&mut self) -> Option<char> {
         if self.eof {
             return None;
@@ -171,6 +172,36 @@ impl<'a> Scanner<'a> {
         self.static_token(typ)
     }
 
+    fn line_comment(&mut self) {
+        self.advance_until(['\n'].iter().cloned().collect());
+        self.lexeme.clear();
+    }
+
+    fn block_comment(&mut self) {
+        // Move to  `*`
+        self.advance();
+
+        loop {
+            let last = self.advance_until(['\n', '/'].iter().cloned().collect());
+            let next = self.peek();
+            match (last, next) {
+                (_, '\n') => self.line += 1,
+                ('*', '/') => {
+                    // Move to another `*`
+                    self.advance();
+                    // Move to last `/`
+                    self.advance();
+                    break;
+                }
+                (_, '\0') => break,
+                (_, _) => (),
+            }
+            self.advance();
+        }
+
+        self.lexeme.clear();
+    }
+
     fn err(&self, msg: &str) -> Option<Result<Token>> {
         Some(Err(Error::Lexical(
             self.line,
@@ -216,7 +247,10 @@ impl<'a> Iterator for Scanner<'a> {
 
             '/' => {
                 if self.match_advance('/') {
-                    self.advance_until(['\n'].iter().cloned().collect());
+                    self.line_comment();
+                    self.next()
+                } else if self.match_advance('*') {
+                    self.block_comment();
                     self.next()
                 } else {
                     self.match_static_token('=', SlashEqual, Slash)
@@ -245,10 +279,11 @@ pub trait TokenIterator<'a> {
 
 impl<'a> TokenIterator<'a> for Chars<'a> {
     fn tokens(self) -> Scanner<'a> {
-        new(self)
+        Scanner::new(self)
     }
 }
 
+/// Checks if `char` is alphanumeric
 fn is_alphanumeric(c: char) -> bool {
     return c.is_digit(36) || c == '_';
 }

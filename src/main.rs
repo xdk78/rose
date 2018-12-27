@@ -29,7 +29,7 @@ fn main() {
     match res {
         Ok(_) => exit(0),
         Err(e) => {
-            println!("{}", e);
+            eprintln!("{}", e);
             exit(1);
         }
     }

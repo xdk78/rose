@@ -2,7 +2,7 @@
 
 ## Install
 
-### Install Rust with rustup and setup nightly version https://www.rust-lang.org
+### Install Rust with rustup and setup nightly version <https://www.rust-lang.org>
 
 ```bash
 rustup default nightly
@@ -11,11 +11,13 @@ rustup update && cargo update
 ```
 
 ## Run
-```
+
+```bash
 cargo run
 ```
 
 ## Build
+
 ```bash
 # development
 cargo build

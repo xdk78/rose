@@ -45,11 +45,4 @@ impl error::Error for Error {
             Error::Lexical(_, _, _) => "lexical error",
         }
     }
-
-    fn cause(&self) -> Option<&error::Error> {
-        match *self {
-            Error::IO(ref e) => e.cause(),
-            _ => None,
-        }
-    }
 }

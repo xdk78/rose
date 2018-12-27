@@ -92,7 +92,7 @@ lazy_static! {
         ("const", TokenType::Const),
         ("while", TokenType::While),
     ]
-        .iter()
-        .cloned()
-        .collect();
+    .iter()
+    .cloned()
+    .collect();
 }

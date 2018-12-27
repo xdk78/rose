@@ -22,11 +22,13 @@ while
 
 mut n = 12.5;
 n +=2;
-// comment here
+// single comment here
 const hellow = "hello world";
 print hellow;
 
 true;
 false;
 
-
+/*
+block comment here
+*/
