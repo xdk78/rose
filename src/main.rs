@@ -45,8 +45,7 @@ fn run_file(filename: &str) -> Result<()> {
 }
 
 fn run(buf: &str) -> Result<()> {
-    let mut tokens = buf.chars().tokens();
-    while let Some(res) = tokens.next() {
+    for res in buf.chars().tokens() {
         match res {
             Ok(t) => println!("{}", t),
             Err(e) => eprintln!("{}", e),

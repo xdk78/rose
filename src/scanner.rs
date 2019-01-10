@@ -2,8 +2,9 @@ use result::{Error, Result};
 use std::collections::{HashSet, VecDeque};
 use std::ops::Index;
 use std::str::Chars;
+use token::reserved;
 use token::Literal;
-use token::{Token, TokenType, RESERVED};
+use token::{Token, TokenType};
 
 pub struct Scanner<'a> {
     src: Chars<'a>,
@@ -165,11 +166,16 @@ impl<'a> Scanner<'a> {
         while is_alphanumeric(self.peek()) {
             self.advance();
         }
+
         let lex: &str = self.lexeme.as_ref();
-        let typ = RESERVED
-            .get(lex)
-            .map_or(TokenType::Identifier, |t| t.clone());
-        self.static_token(typ)
+        let typ = reserved(lex).map_or(TokenType::Identifier, |t| t.clone());
+
+        match typ {
+            TokenType::Null => self.literal_token(typ, Some(Literal::Null)),
+            TokenType::True => self.literal_token(typ, Some(Literal::Boolean(true))),
+            TokenType::False => self.literal_token(typ, Some(Literal::Boolean(false))),
+            _ => self.static_token(typ),
+        }
     }
 
     fn line_comment(&mut self) {
@@ -283,7 +289,7 @@ impl<'a> TokenIterator<'a> for Chars<'a> {
     }
 }
 
-/// Checks if `char` is alphanumeric
+/// Checks if char is alphanumeric
 fn is_alphanumeric(c: char) -> bool {
     return c.is_digit(36) || c == '_';
 }
